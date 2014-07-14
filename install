@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+echo_install_information () {
+  local distro=""
+  if [[ -f /etc/os-release ]]; then
+   distro=`sed -n 's/^ID=\(.*\)$/\1/p' /etc/os-release`
+  fi
+  case $distro in
+    arch)
+      echo <<"EOF"
+To install Docker on Arch Linux, run
+
+# pacman -S docker
+
+See http://docs.docker.com/installation/archlinux/ for more info.
+EOF
+      ;;
+    ubuntu)
+      echo <<"EOF"
+To install Docker on Ubuntu, run
+
+$ curl -s https://get.docker.io/ubuntu/ | sudo sh
+
+See http://docs.docker.com/installation/ubuntulinux/ for more info.
+EOF
+      ;;
+    *)
+      echo <<"EOF"
+Look up how to install Docker on your system:
+  http://docs.docker.com/installation/
+EOF
+      ;;
+  esac
+}
+
+add_plushu_user_to_docker_group () {
+  if groups plushu | grep -q ' docker\b'; then
+    echo "plushu is a member of the docker group... good."
+  else
+    if [[ $EUID == 0 ]]; then
+      echo "Adding plushu to the docker group..."
+     	usermod -aG docker plushu
+    else
+      echo "plushu is not a member of the docker group."
+      echo "To create it, reinstall this plugin as root, or run:"
+      echo
+      echo "# groupadd docker"
+    fi
+  fi
+
+}
+
+setup_docker_for_plushu () {
+  if egrep -i "^docker" /etc/group; then
+    echo "docker group already exists... good."
+    add_plushu_user_to_docker_group
+  else
+    if [[ $EUID == 0 ]]; then
+      echo "docker group does not already exist, creating it..."
+      groupadd docker
+      add_plushu_user_to_docker_group
+    else
+      echo <<EOF
+The \"docker\" user group does not already exist.
+To create it, reinstall this plugin as root, or run:
+
+# groupadd docker
+
+After you have created the docker group, the plushu user will need to be added
+to it for access to Docker. Either re-install the plugin as root, or add
+plushu to the group with:
+
+# usermod -aG docker plushu
+EOF
+    fi
+  fi
+}
+
+check_for_docker_dot_io () {
+  # If docker.io is present (the name it's installed to for Ubuntu)
+  if [[ -x /usr/bin/docker.io ]]; then
+    echo <<"EOF"
+The Docker we want appears to be at /usr/bin/docker.io rather than somewhere
+where it can be called as "docker".
+EOF
+    if [[ $EUID == 0 ]]; then
+      echo "Creating symlink for plushu..."
+      ln -sf /usr/bin/docker.io $PLUSHU_ROOT/bin/docker
+    else
+      echo <<EOF
+You can fix this system-wide by running:
+
+# ln -sf /usr/bin/docker.io /usr/local/bin/docker
+
+Or, if you re-run this script as root, docker will be linked just for plushu,
+as $PLUSHU_ROOT/bin/docker.
+EOF
+    fi
+
+  else
+    echo "Docker does not appear to be installed."
+    echo_install_information
+  fi
+}
+
+# if Docker is present
+if command -v docker >/dev/null 2>&1; then
+
+  # If it exits 0 when run as `docker -v`
+  if docker -v >/dev/null 2>&1; then
+    echo "Docker appears to be installed... good."
+    setup_docker_for_plushu
+
+  # If it exits non-zero when run as `docker -v` (the tray app that goes by
+  # "Docker" exits with a status of 2)
+  else
+    echo <<"EOF"
+It looks like `docker` on your system refers to the system tray application
+known as Docker (http://icculus.org/openbox/2/docker/), rather than the
+Docker we want (https://www.docker.com/).
+EOF
+    check_for_docker_dot_io
+  fi
+else
+  check_for_docker_dot_io
+fi
