@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eo pipefail
+set -eo pipefail; [[ $PLUSHU_TRACE ]] && set -x
 
 echo_install_information () {
   local distro=""
@@ -8,7 +8,7 @@ echo_install_information () {
   fi
   case $distro in
     arch)
-      echo <<"EOF"
+      cat <<"EOF"
 To install Docker on Arch Linux, run
 
 # pacman -S docker
@@ -17,7 +17,7 @@ See http://docs.docker.com/installation/archlinux/ for more info.
 EOF
       ;;
     ubuntu)
-      echo <<"EOF"
+      cat <<"EOF"
 To install Docker on Ubuntu, run
 
 $ curl -s https://get.docker.io/ubuntu/ | sudo sh
@@ -26,7 +26,7 @@ See http://docs.docker.com/installation/ubuntulinux/ for more info.
 EOF
       ;;
     *)
-      echo <<"EOF"
+      cat <<"EOF"
 Look up how to install Docker on your system:
   http://docs.docker.com/installation/
 EOF
@@ -61,7 +61,7 @@ setup_docker_for_plushu () {
       groupadd docker
       add_plushu_user_to_docker_group
     else
-      echo <<EOF
+      cat <<EOF
 The \"docker\" user group does not already exist.
 To create it, reinstall this plugin as root, or run:
 
@@ -80,7 +80,7 @@ EOF
 check_for_docker_dot_io () {
   # If docker.io is present (the name it's installed to for Ubuntu)
   if [[ -x /usr/bin/docker.io ]]; then
-    echo <<"EOF"
+    cat <<"EOF"
 The Docker we want appears to be at /usr/bin/docker.io rather than somewhere
 where it can be called as "docker".
 EOF
@@ -88,7 +88,7 @@ EOF
       echo "Creating symlink for plushu..."
       ln -sf /usr/bin/docker.io $PLUSHU_ROOT/bin/docker
     else
-      echo <<EOF
+      cat <<EOF
 You can fix this system-wide by running:
 
 # ln -sf /usr/bin/docker.io /usr/local/bin/docker
@@ -115,7 +115,7 @@ if command -v docker >/dev/null 2>&1; then
   # If it exits non-zero when run as `docker -v` (the tray app that goes by
   # "Docker" exits with a status of 2)
   else
-    echo <<"EOF"
+    cat <<"EOF"
 It looks like `docker` on your system refers to the system tray application
 known as Docker (http://icculus.org/openbox/2/docker/), rather than the
 Docker we want (https://www.docker.com/).
