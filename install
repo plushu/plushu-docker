@@ -34,6 +34,38 @@ EOF
   esac
 }
 
+check_docker_run_status () {
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl -q is-enabled docker.service; then
+      echo "Docker is enabled via systemctl... good."
+    else
+      echo "Docker does not appear to be enabled. Enable it with:"
+      echo
+      echo "# systemctl enable docker.service"
+      echo
+    fi
+    if systemctl -q is-active docker.service; then
+      echo "Docker is currently running... good."
+    else
+      echo "Docker does not appear to be currently running. Start it with:"
+      echo
+      echo "# systemctl start docker.service"
+      echo
+    fi
+  else
+    if pgrep -x docker >/dev/null 2>&1; then
+      echo "Docker appears to be running... good."
+    else
+      echo "Docker doesn't appear to be running."
+      echo "You should start it with something like:"
+      echo
+      echo "# service start docker"
+      echo
+    fi
+    echo "Make sure Docker is set to run automatically at startup."
+  fi
+}
+
 add_plushu_user_to_docker_group () {
   if groups plushu | grep -q ' docker\b'; then
     echo "plushu is a member of the docker group... good."
@@ -48,7 +80,6 @@ add_plushu_user_to_docker_group () {
       echo "# groupadd docker"
     fi
   fi
-
 }
 
 setup_docker_for_plushu () {
@@ -75,6 +106,7 @@ plushu to the group with:
 EOF
     fi
   fi
+  check_docker_run_status
 }
 
 check_for_docker_dot_io () {
