@@ -6,7 +6,7 @@ echo_install_information () {
   if [[ -f /etc/os-release ]]; then
    distro=`sed -n 's/^ID=\(.*\)$/\1/p' /etc/os-release`
   fi
-  case $distro in
+  case "$distro" in
     arch)
       cat <<"EOF"
 To install Docker on Arch Linux, run
@@ -70,7 +70,7 @@ add_plushu_user_to_docker_group () {
   if groups plushu | grep -q ' docker\b'; then
     echo "plushu is a member of the docker group... good."
   else
-    if [[ $EUID == 0 ]]; then
+    if [[ "$EUID" == 0 ]]; then
       echo "Adding plushu to the docker group..."
      	usermod -aG docker plushu
     else
@@ -87,7 +87,7 @@ setup_docker_for_plushu () {
     echo "docker group already exists... good."
     add_plushu_user_to_docker_group
   else
-    if [[ $EUID == 0 ]]; then
+    if [[ "$EUID" == 0 ]]; then
       echo "docker group does not already exist, creating it..."
       groupadd docker
       add_plushu_user_to_docker_group
@@ -116,9 +116,9 @@ check_for_docker_dot_io () {
 The Docker we want appears to be at /usr/bin/docker.io rather than somewhere
 where it can be called as "docker".
 EOF
-    if [[ $EUID == 0 ]]; then
+    if [[ "$EUID" == 0 ]]; then
       echo "Creating symlink for plushu..."
-      ln -sf /usr/bin/docker.io $PLUSHU_ROOT/bin/docker
+      ln -sf /usr/bin/docker.io "$PLUSHU_ROOT/bin/docker"
     else
       cat <<EOF
 You can fix this system-wide by running:
