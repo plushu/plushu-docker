@@ -67,12 +67,12 @@ check_docker_run_status () {
 }
 
 add_plushu_user_to_docker_group () {
-  if groups plushu | grep -q ' docker\b'; then
+  if groups "$PLUSHU_USER" | grep -q ' docker\b'; then
     echo "plushu is a member of the docker group... good."
   else
     if [[ "$EUID" == 0 ]]; then
       echo "Adding plushu to the docker group..."
-     	usermod -aG docker plushu
+      usermod -aG docker "$PLUSHU_USER"
     else
       echo "plushu is not a member of the docker group."
       echo "To create it, reinstall this plugin as root, or run:"
