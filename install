@@ -67,7 +67,7 @@ check_docker_run_status () {
 }
 
 add_plushu_user_to_docker_group () {
-  if groups "$PLUSHU_USER" | grep -q ' docker\b'; then
+  if id -Gn "$PLUSHU_USER" | grep -q '\bdocker\b'; then
     echo "plushu is a member of the docker group... good."
   else
     if [[ "$EUID" == 0 ]]; then
