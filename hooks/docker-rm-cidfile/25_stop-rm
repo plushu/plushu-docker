@@ -4,12 +4,9 @@ set -eo pipefail; [[ -n "$PLUSHU_TRACE" ]] && set -x
 cidfile="$1"
 cid="$(<"$cidfile")"
 
-# Stop the old container
+# Ensure the container is stopped
 docker stop "$cid" > /dev/null
 
-# Block until that container is done
-docker wait "$cid" > /dev/null
-
-# Remove the old container
+# Remove the container
 docker rm "$cid" > /dev/null
 rm "$cidfile"
